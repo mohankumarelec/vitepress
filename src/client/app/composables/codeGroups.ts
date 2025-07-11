@@ -18,8 +18,20 @@ export function useCodeGroups() {
 
       if (el.matches('.vp-code-group input')) {
         // input <- .tabs <- .vp-code-group
-        const group = el.parentElement?.parentElement
+        const group = el.parentElement?.parentElement?.parentElement
         if (!group) return
+
+        const playButton = group.querySelector(
+          `#${el.getAttribute('x-play-button-id')}`
+        )
+        const playButtonLink = el.getAttribute('x-play-button-link')
+        if (
+          playButton &&
+          playButtonLink &&
+          playButton instanceof HTMLAnchorElement
+        ) {
+          playButton.href = atob(playButtonLink);
+        }
 
         const i = Array.from(group.querySelectorAll('input')).indexOf(el)
         if (i < 0) return

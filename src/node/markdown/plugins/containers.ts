@@ -89,6 +89,8 @@ function createCodeGroup(options: Options, md: MarkdownIt): ContainerArgs {
           const name = nanoid(5)
           let tabs = ''
           let checked = 'checked'
+          const playButtonId = `play-button-${nanoid(7)}`
+          let defaultPlayButtonLink = null
 
           for (
             let i = idx + 1;
@@ -108,20 +110,98 @@ function createCodeGroup(options: Options, md: MarkdownIt): ContainerArgs {
                 isHtml ? tokens[i].content : tokens[i].info,
                 isHtml
               )
+              const link = tokens[i].info.match(/\((.*?)\)/)?.[1]
+              if (!defaultPlayButtonLink && link) {
+                defaultPlayButtonLink = atob(link)
+              }
 
               if (title) {
                 const id = nanoid(7)
-                tabs += `<input type="radio" name="group-${name}" id="tab-${id}" ${checked}><label data-title="${md.utils.escapeHtml(title)}" for="tab-${id}">${title}</label>`
-
+                tabs += `
+<input type="radio" x-play-button-link="${link}" x-play-button-id="${playButtonId}" name="group-${name}" id="tab-${id}" ${checked}>
+<label data-title="${md.utils.escapeHtml(title)}" for="tab-${id}" style="display: inline-flex; align-items: center; gap: 8px;">
+  <img src="https://api.iconify.design/vscode-icons/file-type-python.svg" alt="Code group icon" width="16" height="16">
+  <span>${title}</span>
+</label>
+                `.trim() + '\n'
                 if (checked && !isHtml) tokens[i].info += ' active'
                 checked = ''
               }
             }
           }
 
-          return `<div class="vp-code-group${getAdaptiveThemeMarker(
-            options
-          )}"><div class="tabs">${tabs}</div><div class="blocks">\n`
+          return (
+            `
+<div class="vp-code-group${getAdaptiveThemeMarker(options)}">
+  <div class="tabs">
+    <div>${tabs}</div>
+    ${
+      defaultPlayButtonLink
+        ? `
+    <a id="${playButtonId}" href="${defaultPlayButtonLink}" target="_blank">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="168"
+        height="20"
+        role="img"
+        aria-label="Run instantly in playground"
+      >
+        <title>Run instantly in playground</title>
+        <linearGradient id="s" x2="0" y2="100%">
+          <stop offset="0" stop-color="#bbb" stop-opacity=".1" />
+          <stop offset="1" stop-opacity=".1" />
+        </linearGradient>
+        <clipPath id="r">
+          <rect width="168" height="20" rx="3" fill="#fff" />
+        </clipPath>
+        <g clip-path="url(#r)">
+          <rect width="97" height="20" fill="#555" />
+          <rect x="97" width="71" height="20" fill="#f3bc4d" />
+          <rect width="168" height="20" fill="url(#s)" />
+        </g>
+        <g
+          fill="#fff"
+          text-anchor="middle"
+          font-family="Verdana,Geneva,DejaVu Sans,sans-serif"
+          text-rendering="geometricPrecision"
+          font-size="110"
+        >
+          <text
+            aria-hidden="true"
+            x="495"
+            y="150"
+            fill="#010101"
+            fill-opacity=".3"
+            transform="scale(.1)"
+            textLength="870"
+          >
+            Run instantly in
+          </text>
+          <text x="495" y="140" transform="scale(.1)" fill="#fff" textLength="870">
+            Run instantly in
+          </text>
+          <text
+            aria-hidden="true"
+            x="1315"
+            y="150"
+            fill="#010101"
+            fill-opacity=".3"
+            textLength="610"
+          >
+            playground
+          </text>
+          <text x="1315" y="140" transform="scale(.1)" fill="#513400" textLength="610">
+            playground
+          </text>
+        </g>
+      </svg>
+    </a>`
+        : '<div></div>'
+    }
+  </div>
+  <div class="blocks">
+              `.trim() + '\n'
+          )
         }
         return `</div></div>\n`
       }
